@@ -1,0 +1,70 @@
+const tf = require('@tensorflow/tfjs-node');
+
+async function predictNextSong(userHistory) {
+  // Preprocess the user's listening history
+  const processedHistory = preprocessHistory(userHistory);
+  
+  // Load the pre-trained model
+  const model = await tf.loadLayersModel('path_to_model/model.json');
+
+  // Convert the preprocessed history to a TensorFlow tensor
+  const inputTensor = tf.tensor2d(processedHistory, [1, processedHistory.length]);
+
+  // Make predictions
+  const predictions = model.predict(inputTensor);
+
+  // Get the index of the predicted next song
+  const nextSongIndex = tf.argMax(predictions).dataSync()[0];
+
+  // Retrieve the next song type based on the index
+  const nextSongType = getSongType(nextSongIndex);
+
+  return nextSongType;
+}
+
+function preprocessHistory(userHistory) {
+  // Perform any necessary data preprocessing on the user's listening history
+  // Return a preprocessed array of data that can be fed into the model
+  // For simplicity, let's assume the userHistory is an array of objects with song type and listening frequency
+  const processedHistory = userHistory.map(song => [
+    song.type === 'romantic' ? 1 : 0,
+    song.type === 'party' ? 1 : 0,
+    song.type === 'sad' ? 1 : 0,
+    song.frequency,
+    // Add more features as needed
+  ]);
+
+  return processedHistory;
+}
+
+function getSongType(songIndex) {
+  // Map the song index to the corresponding song type
+  // Modify this function based on your song type mapping
+  switch (songIndex) {
+    case 0:
+      return 'romantic';
+    case 1:
+      return 'party';
+    case 2:
+      return 'sad';
+    // Add more cases as needed
+    default:
+      return 'unknown';
+  }
+}
+
+// Usage example
+const userHistory = [
+  { type: 'romantic', frequency: 10 },
+  { type: 'party', frequency: 5 },
+  { type: 'sad', frequency: 3 },
+  // Add more songs and features as needed
+];
+
+predictNextSong(userHistory)
+  .then(nextSongType => {
+    console.log('Next song type prediction:', nextSongType);
+  })
+  .catch(error => {
+    console.error('Prediction error:', error);
+  });
